@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LPC2148 Simulation</title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .container {
+            display: flex;
+            width: 100%;
+            height: 100%;
+        }
+
+        .code-editor, .simulation {
+            flex: 1;
+            height: 100%;
+        }
+
+        .code-editor {
+            background: #2c3e50;
+            color: white;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .simulation {
+            background: #ecf0f1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+        }
+
+        #editor {
+            flex: 1;
+        }
+
+        #runButton, #addCodeButton {
+            padding: 10px 20px;
+            margin: 10px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+
+        #runButton:hover, #addCodeButton:hover {
+            background-color: #2980b9;
+        }
+
+        .led {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            margin: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+            transition: background-color 0.3s;
+        }
+
+        .off {
+            background-color: #555;
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgb(0, 0, 0);
+            background-color: rgba(0, 0, 0, 0.4);
+        }
+
+        .modal-content {
+            background-color: #fefefe;
+            margin: 15% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+        }
+
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+
+        .close:hover,
+        .close:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        textarea {
+            width: 100%;
+            height: 200px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="code-editor">
+            <select id="codeSelector">
+                <option value="default">Blinking LEDs</option>
+                <option value="example1">Example 1</option>
+                <option value="example2">Example 2</option>
+            </select>
+            <button id="addCodeButton">Add Code</button>
+            <div id="editor"></div>
+            <button id="runButton">Run</button>
+        </div>
+        <div class="simulation">
+            <div id="led-red" class="led off"></div>
+            <div id="led-yellow" class="led off"></div>
+            <div id="led-green" class="led off"></div>
+        </div>
+    </div>
+
+    <!-- Modal Dialog -->
+    <div id="addCodeModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Add LPC2148 Code</h2>
+            <textarea id="newCode" placeholder="Paste your LPC2148 code here"></textarea>
+            <button id="saveCodeButton">Save Code</button>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.12/ace.js"></script>
+    <script>
+        // Initialize the Ace editor
+        const editor = ace.edit("editor");
+        editor.setTheme("ace/theme/monokai");
+        editor.session.setMode("ace/mode/c_cpp");
+
+        // Default LPC2148 code
+        const defaultCode = `
+        #define RED 0
+        #define YELLOW 19
+        #define GREEN 22
+
+        void setup() {
+            pinMode(RED, OUTPUT);
+            pinMode(YELLOW, OUTPUT);
+            pinMode(GREEN, OUTPUT);
+        }
+
+        void loop() {
+            digitalWrite(GREEN, HIGH);
+            delay(3000);
+
+            digitalWrite(GREEN, LOW);
+            digitalWrite(YELLOW, HIGH);
+            delay(500);
+
+            digitalWrite(YELLOW, LOW);
+            digitalWrite(RED, HIGH);
+            delay(2000);
+
+            digitalWrite(RED, LOW);
+            digitalWrite(YELLOW, HIGH);
+            delay(500);
+
+            digitalWrite(YELLOW, LOW);
+        }
+        `;
+
+        // Example LPC2148 codes
+        const example1Code = `
+        #define RED 0
+
+        void setup() {
+            pinMode(RED, OUTPUT);
+        }
+
+        void loop() {
+            digitalWrite(RED, HIGH);
+            delay(1000);
+            digitalWrite(RED, LOW);
+            delay(1000);
+        }
+        `;
+
+        const example2Code = `
+        #define YELLOW 19
+        #define GREEN 22
+
+        void setup() {
+            pinMode(YELLOW, OUTPUT);
+            pinMode(GREEN, OUTPUT);
+        }
+
+        void loop() {
+            digitalWrite(YELLOW, HIGH);
+            digitalWrite(GREEN, LOW);
+            delay(1000);
+
+            digitalWrite(YELLOW, LOW);
+            digitalWrite(GREEN, HIGH);
+            delay(1000);
+        }
+        `;
+
+        // Set default code to the editor
+        editor.setValue(defaultCode);
+        editor.clearSelection();
+
+        const ledRed = document.getElementById('led-red');
+        const ledYellow = document.getElementById('led-yellow');
+        const ledGreen = document.getElementById('led-green');
+
+        // Helper function to turn LEDs on or off with individual colors
+        function setLED(led, state) {
+            if (!led) return;
+            if (state === 'HIGH') {
+                led.classList.add('on');
+                led.classList.remove('off');
+                if (led.id === 'led-red') led.style.backgroundColor = 'red';
+                else if (led.id === 'led-yellow') led.style.backgroundColor = 'yellow';
+                else if (led.id === 'led-green') led.style.backgroundColor = 'green';
+            } else {
+                led.classList.remove('on');
+                led.classList.add('off');
+                led.style.backgroundColor = '#555';
+            }
+        }
+
+        // Parse code to extract commands
+        function parseCode(code) {
+            const lines = code.split('\n');
+            const commands = [];
+            const pinMapping = { RED: ledRed, YELLOW: ledYellow, GREEN: ledGreen };
+
+            for (let line of lines) {
+                line = line.trim();
+                if (line.startsWith('digitalWrite')) {
+                    const matches = line.match(/digitalWrite\((\w+),\s*(\w+)\)/);
+                    if (matches) {
+                        const pin = matches[1];
+                        const state = matches[2];
+                        if (pinMapping[pin]) {
+                            commands.push({ action: 'digitalWrite', pin: pinMapping[pin], state });
+                        }
+                    }
+                } else if (line.startsWith('delay')) {
+                    const matches = line.match(/delay\((\d+)\)/);
+                    if (matches) {
+                        const duration = parseInt(matches[1]);
+                        commands.push({ action: 'delay', duration });
+                    }
+                }
+            }
+            return commands;
+        }
+
+        // Validate LPC2148 code
+        function validateCode(code) {
+            const requiredFunctions = ['void setup()', 'void loop()'];
+            const validPins = ['RED', 'YELLOW', 'GREEN'];
+            const errors = [];
+
+            for (const func of requiredFunctions) {
+                if (!code.includes(func)) {
+                    errors.push(`Missing required function: ${func}`);
+                }
+            }
+
+            const lines = code.split('\n');
+            const openBraces = (code.match(/{/g) || []).length;
+            const closeBraces = (code.match(/}/g) || []).length;
+            let openParentheses = 0;
+            let closeParentheses = 0;
+
+            lines.forEach((line, index) => {
+                line = line.trim();
+                if (line.startsWith('//')) return;
+                if (!line.startsWith('#define') && !line.endsWith(';') && !line.endsWith('{') && !line.endsWith('}') && line !== '') {
+                    errors.push(`Line ${index + 1}: Missing semicolon: ${line}`);
+                }
+                openParentheses += (line.match(/\(/g) || []).length;
+                closeParentheses += (line.match(/\)/g) || []).length;
+                if (line.startsWith('digitalWrite')) {
+                    const matches = line.match(/digitalWrite\((\w+),\s*(\w+)\)/);
+                    if (matches) {
+                        const pin = matches[1];
+                        if (!validPins.includes(pin)) {
+                            errors.push(`Line ${index + 1}: Invalid pin: ${pin}`);
+                        }
+                    }
+                }
+            });
+
+            if (openBraces !== closeBraces) errors.push(`Mismatched braces: {=${openBraces}, }=${closeBraces}`);
+            if (openParentheses !== closeParentheses) errors.push(`Mismatched parentheses: (=${openParentheses}, )=${closeParentheses}`);
+
+            return errors;
+        }
+
+        // Execute parsed commands
+        async function executeCommands(commands) {
+            for (const command of commands) {
+                if (command.action === 'digitalWrite') {
+                    setLED(command.pin, command.state);
+                } else if (command.action === 'delay') {
+                    await new Promise(resolve => setTimeout(resolve, command.duration));
+                }
+            }
+        }
+
+        // Run button
+        document.getElementById('runButton').addEventListener('click', () => {
+            setLED(ledRed, 'LOW');
+            setLED(ledYellow, 'LOW');
+            setLED(ledGreen, 'LOW');
+
+            const code = editor.getValue();
+            const errors = validateCode(code);
+
+            if (errors.length > 0) {
+                alert(`Code validation failed:\n\n${errors.join('\n')}`);
+                return;
+            }
+
+            const commands = parseCode(code);
+            executeCommands(commands);
+        });
+
+        // Code selector dropdown
+        document.getElementById('codeSelector').addEventListener('change', (event) => {
+            const selectedOption = event.target.options[event.target.selectedIndex];
+            if (selectedOption.dataset.code) {
+                editor.setValue(selectedOption.dataset.code);
+                editor.clearSelection();
+            } else {
+                const selectedValue = event.target.value;
+                let codeToLoad;
+                switch (selectedValue) {
+                    case 'default': codeToLoad = defaultCode; break;
+                    case 'example1': codeToLoad = example1Code; break;
+                    case 'example2': codeToLoad = example2Code; break;
+                    default: codeToLoad = defaultCode;
+                }
+                editor.setValue(codeToLoad);
+                editor.clearSelection();
+            }
+        });
+
+        // Modal functionality
+        const modal = document.getElementById('addCodeModal');
+        const addCodeButton = document.getElementById('addCodeButton');
+        const closeModal = document.getElementsByClassName('close')[0];
+        const saveCodeButton = document.getElementById('saveCodeButton');
+        const newCodeTextarea = document.getElementById('newCode');
+
+        addCodeButton.addEventListener('click', () => { modal.style.display = 'block'; });
+        closeModal.addEventListener('click', () => { modal.style.display = 'none'; });
+        window.addEventListener('click', (event) => { if (event.target == modal) modal.style.display = 'none'; });
+
+        saveCodeButton.addEventListener('click', () => {
+            const newCode = newCodeTextarea.value;
+            const errors = validateCode(newCode);
+            if (errors.length > 0) {
+                alert(`Code validation failed:\n\n${errors.join('\n')}`);
+                return;
+            }
+            if (newCode.trim()) {
+                const newOption = document.createElement('option');
+                newOption.text = `User Code ${document.getElementById('codeSelector').length - 2}`;
+                newOption.value = `user${document.getElementById('codeSelector').length - 2}`;
+                newOption.dataset.code = newCode;
+                document.getElementById('codeSelector').add(newOption);
+                document.getElementById('codeSelector').value = newOption.value;
+                editor.setValue(newCode);
+                editor.clearSelection();
+                modal.style.display = 'none';
+                newCodeTextarea.value = '';
+            }
+        });
+
+        // Initial simulation run
+        const initialCommands = parseCode(defaultCode);
+        executeCommands(initialCommands);
+    </script>
+</body>
+</html>

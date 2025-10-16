@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LPC2148 Simulator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+            display: flex;
+            justify-content: center; 
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        .container {
+            background-color: white;
+            padding: 20px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
+            display: flex;
+            flex-direction: row;
+            text-align: center;
+            width: 90%;
+            max-width: 1200px;
+        }
+
+        .editor-container {
+            flex: 1;
+            margin-right: 20px;
+        }
+
+        #editor {
+            height: 500px;
+            width: 100%;
+            border: 1px solid #ccc;
+            margin-bottom: 20px;
+        }
+
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            margin-right: 10px;
+        }
+
+        #output {
+            margin-top: 20px;
+            font-family: monospace;
+            white-space: pre-wrap;
+            text-align: left;
+            color: red;
+        }
+
+        .simulation-container {
+            flex: 0 0 220px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        #simulationCanvas {
+            border: 1px solid #000;
+            margin-top: 20px;
+        }
+
+        select {
+            margin-bottom: 20px;
+            padding: 10px;
+            font-size: 16px;
+            width: 100%;
+        }
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.12/ace.js"></script>
+</head>
+<body>
+    
+    <div class="container">
+        <div class="editor-container">
+            <h1>LPC2148 Code Simulator</h1>
+            <select id="exampleSelector" onchange="loadExample()">
+                <option value="0">Select Example</option>
+                <option value="1">Blink LED</option>
+                <option value="2">Blink Two LEDs</option>
+                <option value="3">Toggle LED with Button</option>
+            </select>
+            <div id="editor"></div>
+            <button onclick="simulate()">Simulate</button>
+            <button onclick="stopSimulation()">Stop</button>
+            <button onclick="addCode()">Add Code</button>
+            <div id="output"></div>
+        </div>
+        <div class="simulation-container">
+            <canvas id="simulationCanvas" width="200" height="200"></canvas>
+        </div>
+    </div>
+    <script>
+        let simulationInterval;
+
+        window.onload = function () {
+            const editor = ace.edit("editor");
+            editor.setTheme("ace/theme/monokai");
+            editor.session.setMode("ace/mode/c_cpp");
+
+            // Load the default example
+            loadExample();
+        }
+
+        function loadExample() {
+            const editor = ace.edit("editor");
+            const exampleSelector = document.getElementById('exampleSelector');
+            const exampleIndex = exampleSelector.value;
+
+            const examples = {
+                "1": `#include <LPC214x.h>  // LPC2148 library
+
+#define LED_PIN (1 << 0)  // Define LED pin as P0.0
+
+void delay(unsigned int count) {
+    // Simple delay loop
+    unsigned int i, j;
+    for (i = 0; i < count; i++) {
+        for (j = 0; j < 10000; j++) {
+            // Do nothing, just waste time
+        }
+    }
+}
+
+int main(void) {
+    // Configure P0.0 as output
+    IO0DIR |= LED_PIN;  // Set P0.0 to output
+
+    while (1) {
+        // Turn on the LED
+        IO0SET = LED_PIN;  // Set P0.0 high
+        delay(100);        // Delay
+
+        // Turn off the LED
+        IO0CLR = LED_PIN;  // Set P0.0 low
+        delay(100);        // Delay
+    }
+
+    return 0;
+}`,
+
+                "2": `#include <LPC214x.h>  // LPC2148 library
+
+#define LED1_PIN (1 << 0)  // Define LED1 pin as P0.0
+#define LED2_PIN (1 << 1)  // Define LED2 pin as P0.1
+
+void delay(unsigned int count) {
+    // Simple delay loop
+    unsigned int i, j;
+    for (i = 0; i < count; i++) {
+        for (j = 0; j < 10000; j++) {
+            // Do nothing, just waste time
+        }
+    }
+}
+
+int main(void) {
+    // Configure P0.0 and P0.1 as output
+    IO0DIR |= LED1_PIN | LED2_PIN;  // Set P0.0 and P0.1 to output
+
+    while (1) {
+        // Turn on LED1 and off LED2
+        IO0SET = LED1_PIN;  // Set P0.0 high
+        IO0CLR = LED2_PIN;  // Set P0.1 low
+        delay(100);         // Delay
+
+        // Turn off LED1 and on LED2
+        IO0CLR = LED1_PIN;  // Set P0.0 low
+        IO0SET = LED2_PIN;  // Set P0.1 high
+        delay(100);         // Delay
+    }
+
+    return 0;
+}`,
+
+                "3": `#include <LPC214x.h>  // LPC2148 library
+
+#define LED_PIN (1 << 0)  // Define LED pin as P0.0
+#define BUTTON_PIN (1 << 1)  // Define Button pin as P0.1
+
+void delay(unsigned int count) {
+    // Simple delay loop
+    unsigned int i, j;
+    for (i = 0; i < count; i++) {
+        for (j = 0; j < 10000; j++) {
+            // Do nothing, just waste time
+        }
+    }
+}
+
+int main(void) {
+    // Configure P0.0 as output and P0.1 as input
+    IO0DIR |= LED_PIN;  // Set P0.0 to output
+    IO0DIR &= ~BUTTON_PIN;  // Set P0.1 to input
+
+    while (1) {
+        // Check if button is pressed
+        if (IO0PIN & BUTTON_PIN) {
+            // Turn on the LED
+            IO0SET = LED_PIN;  // Set P0.0 high
+        } else {
+            // Turn off the LED
+            IO0CLR = LED_PIN;  // Set P0.0 low
+        }
+        delay(10);  // Small delay to debounce button
+    }
+
+    return 0;
+}`
+            };
+
+            editor.setValue(examples[exampleIndex] || "// Select an example to load code");
+        }
+
+        function simulate() {
+            const editor = ace.edit("editor");
+            const code = editor.getValue();
+            const outputDiv = document.getElementById('output');
+            const canvas = document.getElementById('simulationCanvas');
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            outputDiv.textContent = 'Compiling...';
+
+            // Simulate error checking
+            setTimeout(() => {
+                const error = checkForErrors(code);
+                if (error) {
+                    outputDiv.textContent = `Compilation Error:\n${error}`;
+                    return;
+                } else {
+                    outputDiv.textContent = 'Compilation Successful!\nSimulating...';
+
+                    // Extract the delay value from the code
+                    const delayMatch = code.match(/delay\((\d+)\);/);
+                    const delayTime = delayMatch ? parseInt(delayMatch[1]) * 10 : 1000; // Default to 1000 if not found
+
+                    // Simulate the LED toggling
+                    let ledOn = false;
+                    simulationInterval = setInterval(() => {
+                        ledOn = !ledOn;
+                        ctx.clearRect(0, 0, canvas.width, canvas.height);
+                        if (ledOn) {
+                            ctx.fillStyle = 'green';
+                            ctx.fillRect(50, 50, 100, 100);
+                        }
+                        outputDiv.textContent += ledOn ? 'LED ON\n' : 'LED OFF\n';
+                    }, delayTime);
+
+                    // Stop the simulation after 10 iterations
+                    setTimeout(() => {
+                        clearInterval(simulationInterval);
+                    }, delayTime * 10);
+                }
+            }, 500);
+        }
+
+        function stopSimulation() {
+            if (simulationInterval) {
+                clearInterval(simulationInterval);
+                const outputDiv = document.getElementById('output');
+                outputDiv.textContent += 'Simulation stopped by user.\n';
+            }
+        }
+
+        function addCode() {
+            const newCode = prompt("Enter your code:");
+            if (newCode) {
+                const editor = ace.edit("editor");
+                editor.setValue(newCode);
+            }
+        }
+
+        // Mock function to simulate error checking
+        function checkForErrors(code) {
+            if (!code.includes(';')) {
+                return 'Missing semicolon';
+            }
+            if (!code.includes('int main')) {
+                return 'Missing main function';
+            }
+            if (!code.includes('void delay')) {
+                return 'Missing delay function';
+            }
+            if (!code.match(/#include\s+<LPC214x\.h>/)) {
+                return 'Missing or incorrect library inclusion';
+            }
+            if (!code.match(/#define\s+LED_PIN\s+\(1\s+<<\s+\d+\)/)) {
+                return 'Missing or incorrect LED_PIN definition';
+            }
+            // Check for missing braces
+            const openBraces = (code.match(/{/g) || []).length;
+            const closeBraces = (code.match(/}/g) || []).length;
+            if (openBraces !== closeBraces) {
+                return 'Mismatched braces';
+            }
+            return null;
+        }
+    </script>
+</body>
+</html>

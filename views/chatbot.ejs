@@ -1,0 +1,1066 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Code Generator</title>
+    <style>
+        /* CSS styles */
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            margin: 0;
+            padding: 0;
+        }
+
+        header {
+            background-color: #333;
+            color: #fff;
+            text-align: center;
+            padding: 10px 0;
+        }
+
+        main {
+            max-width: 800px;
+            margin: 20px auto;
+        }
+
+        .chat-container {
+            max-width: 600px;
+            margin: 20px auto;
+            background-color: #fff;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .chat-log {
+            height: 400px;
+            overflow-y: scroll;
+            padding: 10px;
+        }
+
+        .chat-input {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            background-color: #f0f0f0;
+        }
+
+        .chat-input input[type="text"] {
+            flex: 1;
+            padding: 8px;
+            font-size: 16px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            margin-right: 10px;
+        }
+
+        .chat-input button {
+            padding: 8px 12px;
+            font-size: 16px;
+            background-color: #4CAF50;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .chat-input button:hover {
+            background-color: #45a049;
+        }
+
+        .chat-bubble {
+            background-color: #f0f0f0;
+            color: #333;
+            padding: 10px;
+            border-radius: 8px;
+            margin: 10px 20px;
+            max-width: 80%;
+            white-space: pre-wrap; /* Ensure code formatting is preserved */
+            position: relative;
+        }
+
+        .chat-bubble.code {
+            background-color: #333;
+            color: #fff;
+        }
+
+        .chat-bubble .copy-button {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background-color: #4CAF50;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            padding: 5px;
+            cursor: pointer;
+        }
+
+        .chat-bubble .copy-button:hover {
+            background-color: #45a049;
+        }
+
+        .bot {
+            text-align: left;
+        }
+
+        .user {
+            text-align: right;
+        }
+
+        nav a {
+            color: #fff;
+            padding: 14px 20px;
+            text-decoration: none;
+            text-align: center;
+        }
+
+        nav a:hover {
+            background-color:#358435;
+        }
+
+        #stopButton {
+            margin-left: 10px;
+            padding: 8px 12px;
+            font-size: 16px;
+            background-color: #d9534f;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        #stopButton:hover {
+            background-color: #c9302c;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <nav>
+    
+            
+            <a href="/simulation">Simulation</a>
+            
+            
+        </nav>
+        <h1>LPCxx Code Generator</h1>
+    </header>
+    <main>
+        <div class="chat-container">
+            <div class="chat-log" id="chatLog">
+                <!-- Chat log will appear here -->
+            </div>
+            <div class="chat-input">
+                <input type="text" id="userInput" placeholder="Ask me anything...">
+                <button type="button" id="sendButton">Send</button>
+                <button type="button" id="stopButton">Stop Generation</button>
+            </div>
+        </div>
+    </main>
+    <script>
+        // JavaScript
+        document.addEventListener('DOMContentLoaded', function() {
+            const chatLog = document.getElementById('chatLog');
+            const userInput = document.getElementById('userInput');
+            const sendButton = document.getElementById('sendButton');
+            const stopButton = document.getElementById('stopButton');
+            let isGenerating = false;
+            let timeoutId = null;
+
+            sendButton.addEventListener('click', sendMessage);
+            userInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    sendMessage();
+                }
+            });
+
+            stopButton.addEventListener('click', stopGeneration);
+
+            function sendMessage() {
+                const userMessage = userInput.value.trim();
+                if (userMessage === '' || isGenerating) return;
+
+                appendMessage(userMessage, 'user');
+                processUserInput(userMessage);
+                userInput.value = '';
+            }
+
+            function appendMessage(message, sender) {
+                const chatBubble = document.createElement('div');
+                chatBubble.classList.add('chat-bubble', sender);
+                chatBubble.textContent = message;
+                chatLog.appendChild(chatBubble);
+                chatLog.scrollTop = chatLog.scrollHeight; // Scroll to bottom
+            }
+
+            function processUserInput(message) {
+                const botResponse = generateBotResponse(message);
+                const isCode = botResponse.includes('#include');
+                typeWriterEffect(botResponse, 'bot', isCode);
+            }
+
+            function generateBotResponse(message) {
+                const lowerCaseMessage = message.toLowerCase();
+                if (lowerCaseMessage.startsWith('hi') || lowerCaseMessage.startsWith('hello')) {
+                    return 'Hello, please tell me which code to generate';
+                } else if (lowerCaseMessage.includes('lpc2148 timer')||(lowerCaseMessage.includes('time'))||lowerCaseMessage.includes('alarm')) {
+                    return `// Include necessary header files
+#include <lpc214x.h>
+
+// Define LCD-related functions (assuming you have these implemented)
+void LCD_Init();
+void LCD_Clear();
+void LCD_WriteChar(char data);
+void LCD_SetCursor(unsigned char row, unsigned char col);
+// ... other LCD functions
+
+// Define RTC-related functions
+void RTC_Init();
+void RTC_UpdateTime();
+void RTC_SetAlarm(unsigned char hour, unsigned char minute);
+// ... other RTC functions
+
+// Define pushbutton-related functions
+unsigned char ReadPushButton1();
+unsigned char ReadPushButton2();
+// ... other pushbutton functions
+
+// Define global variables for time and alarm
+unsigned char hour = 0;
+unsigned char minute = 0;
+unsigned char alarm_hour = 0;
+unsigned char alarm_minute = 0;
+unsigned char alarm_active = 0;
+
+// RTC interrupt handler
+__irq void RTC_ISR(void) {
+    RTC_UpdateTime();
+
+    // Check if the alarm should be activated
+    if (alarm_active && (hour == alarm_hour) && (minute == alarm_minute)) {
+        // Activate the alarm (e.g., turn on an LED or display an alarm message on the LCD)
+        // Implement alarm activation here
+    }
+
+    // Clear the interrupt flag
+    // Implement RTC interrupt clear here
+
+    VICVectAddr = 0; // Acknowledge interrupt
+}
+
+// Main function
+int main() {
+    // Initialize the LCD and RTC
+    LCD_Init();
+    RTC_Init();
+
+    // Set the initial time (you can add functionality to set it using pushbuttons)
+    // Initialize the alarm time (you can add functionality to set it using pushbuttons)
+
+    // Enable RTC interrupt
+    // Implement RTC interrupt enable here
+
+    while (1) {
+        // Read pushbuttons and implement functionalities
+        if (ReadPushButton1()) {
+            // Functionality to increase/decrease alarm time (set alarm_hour and alarm_minute)
+        }
+
+        if (ReadPushButton2()) {
+            // Functionality to activate/deactivate the alarm (toggle alarm_active)
+        }
+
+        // Display the current time and alarm status on the LCD
+        LCD_SetCursor(0, 0);
+        // Implement LCD display for current time (hour and minute)
+        LCD_SetCursor(1, 0);
+        // Implement LCD display for alarm time (alarm_hour and alarm_minute) and alarm status (alarm_active)
+
+        // You can add a small delay here to avoid rapid button presses affecting functionality
+    }
+
+    return 0;
+}`;
+                } else if (lowerCaseMessage.includes('lpc2148 1 ') || lowerCaseMessage.includes('lpc2148 one')||(lowerCaseMessage.includes('one job'))) {
+                    return `#include <lpc21xx.h>
+#include <rtl.h>
+
+unsigned int a = 4, b = 3, c;
+
+__task void job1(void);
+
+int main() {
+    os_sys_init(job1);
+    while(1);
+}
+
+__task void job1(void) {
+    while (1) {
+        c = a + b;
+    }
+}`;
+                } 
+                else if(lowerCaseMessage.includes('2 jobs 1 job ') || lowerCaseMessage.includes('two job one job')||lowerCaseMessage.includes('two job')||lowerCaseMessage.includes('2 job')){
+                    return `#include<lpc21xx.h> #include<rtl.h> unsigned int a=4,b=3,c; __task void job1(void); __task void job2(void); int main()
+{ os_sys_init_prio(job1,10); while(1);
+}
+__task void job1(void)
+{
+while(1) {
+os_tsk_create(job2,11); c=a+b;
+}
+}
+__task void job2(void) {
+while(1) {
+c=a-b;
+}
+}`  
+
+                }
+                else if(lowerCaseMessage.includes('switching between two jobs using priority')){
+                    return `#include<lpc21xx.h>
+#include<rtl.h>
+unsigned int a=4,b=3,c;
+OS_TID t1,t2;
+__task void job1(void); __task void job2(void); int main()
+{ os_sys_init_prio(job1,5); while(1);
+}
+__task void job1(void)
+{
+t1=os_tsk_prio_self(5); t2=os_tsk_create(job2,3); while(1)
+{
+c=a+b;
+os_tsk_prio(t2,6);
+}
+}
+__task void job2(void) {
+while(1)
+{
+c=a-b; os_tsk_prio_self(2); }
+}`
+                }
+                else if(lowerCaseMessage.includes('blinking the LED using software delay')||lowerCaseMessage.includes('blink led using software')){
+                    return `#include<lpc21xx.h>
+#include<rtl.h>
+OS_TID t1,t2;
+__task void job1(void); __task void job2(void); int main()
+{
+PINSEL0=0x00000000; IODIR0=0x000f0000; os_sys_init_prio(job1,5); while(1);
+}
+__task void job1(void)
+{
+t1=os_tsk_prio_self(5); t2=os_tsk_create(job2,3); while(1)
+{
+IOSET0=0x000f0000; os_tsk_prio(t2,6);
+}
+}
+__task void job2(void)
+{
+while(1)
+{
+IOCLR0=0x000f0000; os_tsk_prio_self(2); }
+}`
+                }
+
+                else if(lowerCaseMessage.includes('blinking led using hardware delay')||lowerCaseMessage.includes('blink led using hardware')){
+                    return `#include<lpc21xx.h>
+#include<rtl.h>
+OS_TID t1,t2;
+__task void job1(void); __task void job2(void); int main()
+{
+PINSEL0=0x00000000; IODIR0=0x000f0000; os_sys_init_prio(job1,5); while(1);
+}
+__task void job1(void)
+{
+t1=os_tsk_prio_self(5); t2=os_tsk_create(job2,3); while(1)
+{
+IOSET0=0x000f0000; os_tsk_prio(t2,6);
+}
+}
+__task void job2(void)
+{
+while(1)
+{
+IOCLR0=0x000f0000; os_tsk_prio_self(2); }
+}`
+                }
+                else if(lowerCaseMessage.includes('loop counts using hardware')){
+
+                    return `#include<lpc21xx.h>
+#include<rtl.h>
+#define prescalar 11999
+unsigned int x,y,k,i; float t=0.001,T;
+int main()
+{
+T0PR=prescalar; T0TCR=0x01; x=T0PC; for(i=0;i<50;i++);
+y=T0PC; T0TCR=0x00;
+k=y-x; T=(t*k)/T0PR; }`
+                }
+else if(lowerCaseMessage.includes('task using event flags')||lowerCaseMessage.includes('event flags')){
+    return `#include<lpc21xx.h>
+#include<rtl.h>
+unsigned int count,i;
+OS_TID t1,t2;
+__task void job2(void);
+__task void job1(void)
+{
+t1=os_tsk_self(); t2=os_tsk_create(job2,1); os_evt_wait_or(0x0002,0x0004); while(1)
+{
+for(i=0;i<10;i++)
+count=count+1;
+} os_evt_set(0x0001,t2); }
+__task void job2(void) {
+os_evt_wait_or(0x0001,0x0002); while(1)
+{
+for(i=10;i<20;i++) count=count+1;
+} os_evt_set(0x0002,t1); }
+int main()
+{
+os_sys_init(job1);
+while(1); }`
+}
+else if(lowerCaseMessage.includes('4 tasks')||(lowerCaseMessage.includes('four'))){
+    return `#include<lpc21xx.h>
+#include<rtl.h>
+#include<stdio.h>
+ unsigned int i;
+unsigned char msg1[]={"HAI "},msg2[]={"BYE "},msg3[]={"BVB "},msg4[]={"KLE "};
+unsigned char mg1,mg2,mg3,mg4;
+OS_TID t1,t2,t3,t4;
+void delay(unsigned int n)
+{
+unsigned int j;
+for(j=0;j<n;j++);
+}
+void serial()
+{
+PINSEL0=0x00000005;
+U0LCR=0x83;
+U0DLL=0x61;
+U0LCR=0x03;
+}
+__task void job2(void);
+__task void job3(void);
+__task void job4(void);
+__task void job1(void)
+{
+t1=os_tsk_self();
+t2=os_tsk_create(job2,0);
+t3=os_tsk_create(job3,0);
+t4=os_tsk_create(job4,0);
+os_evt_wait_or(0x0004,0x0005); while(1)
+{
+while(msg1[i]!='\0')
+{ while(!(U0LSR&0x20)); U0THR=msg1[i];
+i++;
+}
+U0THR=U0RBR; delay(10000000);
+
+ i=0;
+}
+os_evt_set(0x0001,t2);
+}
+__task void job2(void)
+{ os_evt_wait_or(0x0001,0x0005); while(1)
+{
+while(msg2[i]!='\0')
+{
+while(!(U0LSR&0x20)); U0THR=msg2[i];
+i++;
+}
+U0THR=U0RBR; delay(10000000);
+i=0;
+}
+os_evt_set(0x0002,t3);
+}
+__task void job3(void)
+{ os_evt_wait_or(0x0002,0x0005); while(1)
+{
+while(msg3[i]!='\0')
+{
+while(!(U0LSR&0x20)); U0THR=msg3[i];
+i++;
+}
+U0THR=U0RBR; delay(10000000);
+i=0;
+}
+
+os_evt_set(0x0003,t4);
+}
+__task void job4(void)
+{ os_evt_wait_or(0x0003,0x0005); while(1)
+{
+while(msg4[i]!='\0')
+{ while(!(U0LSR&0x20)); U0THR=msg4[i];
+i++;
+}
+U0THR=U0RBR; delay(10000000);
+i=0;
+} os_evt_set(0x0004,t1); }
+int main()
+{
+serial(); os_sys_init(job1);
+while(1);
+}`
+} else if(lowerCaseMessage.includes('reversed order')||lowerCaseMessage.includes('reverse')){
+    return `#include<lpc21xx.h>
+#include<rtl.h>
+#include<string.h> #include<stdio.h>
+OS_TID t1,t2,t3,t4,t5,t6;
+unsigned int count=22,end=0,begin;
+unsigned char unsigned char unsigned char unsigned char unsigned char unsigned char unsigned int i;
+mg;
+ms1[22];
+msg[]="HAI";//message to be displayed msg1[]="BYE";//message to be displayed msg2[]="KLE";//message to be displayed msg3[]="BVB";//message to be displayed
+void delay(unsigned int x) {
+int a;
+for(a=0;a<x;a++); }
+void serial(void) {
+PINSEL0=0X00000005;
+U0LCR=0X83;// LINE CONTROL REGISTER U0DLL=0X61; //TO GIVE PROPER CLOCK TIME U0LCR=0X03; //LINE CONTROL 7TH BIT IS MADE 0 TO
+DISABLE }
+__task void job5(void); __task void job4(void); __task void job3(void); __task void job2(void); __task void job1(void) {
+ t1=os_tsk_self(); t2=os_tsk_create(job2,0); t3=os_tsk_create(job3,0); t4=os_tsk_create(job4,0); t5=os_tsk_create(job5,0);
+while(1) {
+os_evt_wait_or(0x0005,0X0001);
+serial(); while(1)
+{
+for(i=0;i<3;i++)
+{
+while(!(U0LSR& 0X20));
+U0THR=msg[i]; }
+while(!(U0LSR & 0X01)); mg=U0RBR;
+U0THR=mg; delay(100000);
+os_evt_set(0x0001,t2); }
+} }
+__task void job2(void) {
+while(1) {
+os_evt_wait_or(0x0001,0X0010); // waiting time or timeout
+time
+serial();
+
+ } }
+while(1) {
+for(i=0;i<3;i++) {
+while(!(U0LSR& 0X20));
+U0THR=msg1[i]; }
+while(!(U0LSR & 0X01)); mg=U0RBR;
+U0THR=mg; delay(100000); os_evt_set(0x0002,t3);
+}
+__task void job3(void) {
+while(1) {
+os_evt_wait_or(0x0002,0X0020); // waiting time or timeout
+time
+serial();
+while(1) {
+for(i=0;i<3;i++) {
+while(!(U0LSR& 0X20));
+U0THR=msg2[i]; }
+while(!(U0LSR & 0X01)); mg=U0RBR;
+U0THR=mg; delay(100000);
+
+ os_evt_set(0x0003,t4); }
+} }
+__task void job4(void) {
+while(1) {
+os_evt_wait_or(0x0003,0X0030); // waiting time or timeout
+time
+serial();
+while(1) {
+for(i=0;i<3;i++) {
+while(!(U0LSR& 0X20));
+U0THR=msg3[i]; }
+while(!(U0LSR & 0X01)); mg=U0RBR;
+U0THR=mg; delay(100000); os_evt_set(0x0004,t5);
+} }
+}
+__task void job5(void) {
+while(1) {
+os_evt_wait_or(0x0004,0X0040); // waiting time or timeout
+time
+strcat(msg,msg1);
+strcat(msg,msg2);
+
+strcat(msg,msg3);
+end =12;
+for (begin = 0; begin <13; begin++) {
+ms1[begin] = msg[end];
+end--; }
+serial();
+while(1) {
+for(i=0;i<13;i++) {
+while(!(U0LSR& 0X20));
+U0THR=ms1[i]; }
+while(!(U0LSR & 0X01)); mg=U0RBR;
+U0THR=mg; delay(100000); os_evt_set(0x0005,t1);
+} }
+}
+int main() {
+os_sys_init(job1);
+while(1); }`
+}
+else if(lowerCaseMessage.includes('broadcast')){
+    return `#include<stdio.h>
+#include<rtl.h>
+#include<lpc21xx.h>
+void serial();
+void disp(unsigned int temp); void delay(unsigned int del); os_mbx_declare(msgbox,100); _declare_box(mpool,20,32); unsigned int cnt1,cnt2,cnt3; char arr1[20],arr2[20],arr3[20]; int i=0;
+__task void task3(void);
+__task void task2(void);
+__task void task1(void)
+{
+U32 *mptr; os_tsk_create(task2,0);
+os_tsk_create(task3,0); os_mbx_init(msgbox,sizeof(msgbox)); mptr=_alloc_box(mpool);
+while(1)
+{
+while(!(cnt1==5))
+{
+cnt1++; sprintf(arr1,"counter1:%d",cnt1); while(arr1[i]!='\0')
+{
+os_dly_wait(1); while(!(U0LSR&0x20)); U0THR=arr1[i];
+i++;
+}
+i=0;
+while(!(U0LSR&0x20));
+ U0THR='\n';
+os_dly_wait(5);
+}
+if(cnt1==5)
+{
+mptr[0]=cnt1;
+cnt1=0;
+os_mbx_send(msgbox,mptr,0xffff); os_dly_wait(5);
+}
+}
+}
+__task void task2(void)
+{
+U32 *rptr;
+cnt2=0;
+while(1)
+{ os_mbx_wait(msgbox,(void**)&rptr,0xffff); cnt2=rptr[0];
+while(!(cnt2==9))
+{
+cnt2++;
+sprintf(arr2,"counter2:%d",cnt2); os_dly_wait(3); while(arr2[i]!='\0')
+{
+while(!(U0LSR&0x20)); U0THR=arr2[i];
+i++;
+}
+i=0;
+while(!(U0LSR&0x20)); U0THR='\n'; os_mbx_send(msgbox,rptr,0xffff);
+
+ os_dly_wait(5); }
+cnt2=0;
+}
+}
+__task void task3(void) {
+U32 *lptr;
+cnt3=0;
+while(1)
+{ os_mbx_wait(msgbox,(void**)&lptr,0xffff); cnt3=lptr[0];
+while(!(cnt3==9))
+{
+cnt3++;
+disp(cnt3);
+os_dly_wait(5);
+}
+cnt3=0;
+}
+}
+int main()
+{
+serial(); _init_box(mpool,sizeof(mpool),sizeof(U32)); os_sys_init(task1);
+}
+void serial(void)
+{
+PINSEL0=0X00000005;
+DISABLE }
+U0LCR=0X83;// LINE CONTROL REGISTER U0DLL=0X61; //TO GIVE PROPER CLOCK TIME U0LCR=0X03; //LINE CONTROL 7TH BIT IS MADE 0 TO
+
+void disp(unsigned int temp)
+{
+unsigned int i;
+unsigned int da[5]={0x006D0000,0x007D0000,0x00070000,0x007F0000,0x006F0000};
+IOSET0=0X20000000;
+i=temp;
+IOSET0=da[i];
+delay(65000);
+delay(65000);
+delay(65000);
+delay(65000);
+delay(65000); delay(65000);delay(65000);delay(65000);delay(65000);delay(65000);dela y(65000);delay(65000);delay(65000);delay(65000);delay(65000);delay(65 000);delay(65000);delay(65000);delay(65000);delay(65000);delay(65000 );delay(65000);delay(65000);delay(65000);delay(65000);delay(65000);de lay(65000);delay(65000);delay(65000);delay(65000);delay(65000);delay( 65000);delay(65000);delay(65000);delay(65000);delay(65000);delay(650 00);delay(65000);
+IOCLR0=0X00FF0000; }
+void delay(unsigned int del) {unsigned int k; for(k=0;k<del;k++);
+}`
+}
+else if(lowerCaseMessage.includes('addition multiplication division substraction')){
+    return `#include<lpc21xx.h> #include<rtl.h>
+OS_TID t1,t2,t3,t4,t5; unsigned int a=6,b=3,c; void disp(unsigned int ); void delay(unsigned int ); __task void job2(void); __task void job3(void); __task void job4(void); __task void job5(void); __task void job1(void)
+{
+t1=os_tsk_prio_self(5); t2=os_tsk_create(job2,5); t3=os_tsk_create(job3,5); t4=os_tsk_create(job4,5); t5=os_tsk_create(job5,5); while(1)
+{
+c=a+b; disp(c);
+delay(650000);delay(650000);delay(650000);delay(650000);delay(650000);d elay(650000);delay(650000);delay(650000);delay(650000);delay(65000);del ay(65000);delay(65000);delay(65000);
+ os_tsk_prio(t2,6);
+IOCLR0=0X00FF0000; }
+}
+__task void job2(void) {
+while(1) {
+c=a-b; disp(c);
+delay(650000);delay(650000);delay(650000);delay(650000);delay(650000);d elay(650000);delay(65000);delay(65000);delay(65000);delay(65000);delay(6 5000);delay(65000);
+os_tsk_prio(t3,7); }
+}
+__task void job3(void) {
+while(1) {
+c=a*b; disp(c);
+delay(65000);delay(65000);delay(65000);delay(65000);delay(65000);delay(6 5000);delay(65000);delay(65000);delay(65000);delay(65000);delay(65000); delay(65000);
+os_tsk_prio(t4,8);
+
+ } }
+__task void job4(void) {
+while(1) {
+c=a/b; disp(c);
+delay(65000);delay(65000);delay(65000);delay(65000);delay(65000);delay(6 5000);delay(65000);delay(65000);delay(65000);delay(65000);delay(65000); delay(65000);
+os_tsk_prio(t5,9);
+} }
+__task void job5(void) {
+while(1) {
+IOSET0=0x0004000; delay(5000000); IOCLR0=0x00004000;
+
+ } }
+delay(5000000); os_tsk_prio(t2,2);
+os_tsk_prio(t3,2); os_tsk_prio(t4,2); os_tsk_prio(t5,2); // os_dly_wait(10);
+int main(void)
+{ IODIR0=0X20FF4000;
+os_sys_init(job1);
+while(1); }
+void disp(unsigned int temp) {
+unsigned int i;
+unsigned int da[16]={0x003F0000,0x00060000,0x005B0000,0x004F0000,0x00660000,0x 006D0000,0x007D0000,0x00070000,
+0x007F0000,0x006F0000,0x00770000,0x007C0000,0x00390000,0x005E000 0,0x00790000,0x00710000};
+
+ IOSET0=0X20000000; i=temp;
+IOSET0=da[i]; delay(65000); delay(65000); delay(65000); delay(65000); delay(65000);
+delay(65000);delay(65000);delay(65000);delay(65000);delay(65000);delay(6 5000);delay(65000);delay(65000);delay(65000);delay(65000);delay(65000); delay(65000);delay(65000);delay(65000);delay(65000);delay(65000);delay(6 5000);delay(65000);delay(65000);delay(65000);delay(65000);delay(65000); delay(65000);delay(65000);delay(65000);delay(65000);delay(65000);delay(6 5000);delay(65000);delay(65000);delay(65000);delay(65000);delay(65000);
+IOCLR0=0X00FF0000; }
+void delay(unsigned int del) {unsigned int k; for(k=0;k<del;k++);
+}
+13. To demonstrate led walk and display message on uart using swi #include<stdio.h>
+#include<lpc214x.h>
+#include<rtl.h>
+U32 i; OS_TID t1,t2;
+
+ unsigned char msg1[]="Fire extinguisher is on"; unsigned char msg2[]="Fire extinguisher is off";
+void serial(void) {
+PINSEL0=0X00000005; U0LCR=0X83; U0DLL=0X61; U0LCR=0X03;
+}
+__task void task1(void); __task void task2(void);
+void __swi(9)ON(void); void __swi(8)OFF(void); void delay(unsigned int k) {
+int i;
+for(i=0;i<k;i++); }
+void __SWI_8(void) {
+while(1) {
+
+ for(i=0;i<23;i++) {
+while(!(U0LSR &0X20));
+U0THR=msg1[i]; }
+}
+delay(100000);
+IO0DIR = 0x000F0000; for(i=0;i<1000000;i++); IOCLR0 = 0x000F0000; for(i=0;i<1000000;i++);
+}
+void __SWI_9(void) {
+while(1) {
+for(i=0;i<24;i++) {
+while(!(U0LSR &0X20));
+U0THR=msg2[i]; }
+} delay(100000);
+IO0DIR = 0x000F0000;
+
+ for(i=0;i<1000000;i++); IOSET0 = 0x000F0000; for(i=0;i<1000000;i++);
+}
+__task void task1(void) {
+t1=os_tsk_self(); os_tsk_prio(t1,0);
+t2=os_tsk_create(task2,1); while(1)
+{
+ON(); }
+}
+__task void task2(void) {
+os_tsk_prio(t2,1);
+while(1) {
+OFF(); //os_dly_wait(1);
+} }
+
+int main() {
+serial(); os_sys_init(task1);
+while(1);
+}`
+}
+else if(lowerCaseMessage.includes('keypad')){
+    return `//keypad to uart0 display(qn7)
+#include<lpc21xx.h>
+#include<string.h>
+#include<stdio.h>
+void delay(unsigned int);
+void disp(unsigned int);
+void serial()
+{
+    PINSEL0=0x00000005;
+    U0LCR=0x83;
+    U0DLM=0x00;
+    U0DLL=0x61;
+    U0LCR=0x03;
+}
+int main()
+{
+    unsigned long int value,i;
+    unsigned int row0[4]= {0x00ee0000,0x00ed0000,0x00eb0000,0x00e70000};
+    unsigned int row1[4]= {0x00de0000,0x00dd0000,0x00db0000,0x00d70000};
+    unsigned int row2[4]= {0x00be0000,0x00bd0000,0x00bb0000,0x00b70000};
+    unsigned int row3[4]= {0x007e0000,0x007d0000,0x007b0000,0x00770000};
+    IODIR1 =0XFFF0FFFF;
+    PINSEL1=0x00000000;
+    IODIR0=0xf0ff0000;
+    IOSET0=0XF0000000;
+    while(1)
+    {
+        IO1PIN=0x00ff0000;
+        IOCLR1=0x00100000;
+        value=IOPIN1;
+        delay(50000);
+        value=value & 0x00ff0000;
+        for(i=0; i<4; i++)
+        {
+            if(value==row0[i])
+            {
+                disp(i);
+                delay(65000);
+                delay(65000);
+                delay(65000);
+                delay(65000);
+                delay(65000);
+            }
+        }
+        IO1PIN=0x00ff0000;
+        IOCLR1=0x00200000;
+        value=IOPIN1;
+        delay(50000);
+        delay(50000);
+        value=value & 0x00ff0000;
+        for(i=0; i<4; i++)
+        {
+            if(value==row1[i])
+            {
+                disp(i+4);
+                delay(65000);
+                delay(65000);
+                delay(65000);
+                delay(65000);
+                delay(65000);
+            }
+        }
+        IO1PIN=0x00ff0000;
+        IOCLR1=0x00400000;
+        value=IOPIN1;
+        delay(65000);
+        delay(65000);
+        delay(65000);
+        delay(65000);
+        delay(65000);
+        value=value & 0x00ff0000;
+        for(i=0; i<4; i++)
+        {
+            if(value==row2[i])
+            {
+                disp(i+8);
+                delay(50000);
+            }
+        }
+        IO1PIN=0x00ff0000;
+        IOCLR1=0x00800000;
+        value=IOPIN1;
+        delay(65000);
+        delay(65000);
+        delay(65000);
+        delay(65000);
+        delay(65000);
+        value=value & 0x00ff0000;
+        for(i=0; i<4; i++)
+        {
+            if(value==row3[i])
+            {
+                disp(i+12);
+                delay(65000);
+                delay(65000);
+                delay(65000);
+                delay(65000);
+                delay(65000);
+            }
+        }
+    }
+}
+void disp(unsigned int temp)
+{
+    char k[16][16]= {"zero","one","two","three","four","five","SIX","SEVEN","EIGHT","NINE","TEN","ELEVEN","TWELVE","THIRTEEN","FOURTEEN","FIFTEEN"};
+    char word_no[10];
+    int i=0;
+    strcpy(word_no,k[temp]);
+    serial();
+    while(word_no[i]!='\0')
+    {
+        while(!(U0LSR & 0x20));
+        U0THR=word_no[i];
+        i++;
+    }
+    delay(20000);
+    U0THR='\t';
+    i=0;
+}
+void delay(unsigned int del)
+{
+    unsigned int k;
+    for(k=0; k<10*del; k++);
+}`
+}
+else if(lowerCaseMessage.includes('RTC')||(lowerCaseMessage.includes('rtc'))){
+    return `3MHZ,VPBDIV =ENABLE
+
+
+#include <lpc21xx.h>
+#include <stdio.h>
+ char arr1[10],arr2[10],arr3[20];
+void rtc(void)
+{
+PREINT=0X5A;
+PREFRAC=0X46C0;
+CCR=0X00;
+SEC=0;
+MIN=24;
+HOUR=3;
+CCR=0X01;
+}
+
+   void serial()
+   {
+   PINSEL0=0X0000005;  		//select TXD0 and RXD0 lines										0											0       IODIR1 = 0X00ff0000;//define as o/p lines
+        U0LCR  = 0X00000083;		//enable baud rate divisor loading and
+	          						//select the data format
+        U0DLM = 0X00; 
+        U0DLL = 0x61;      		//select baud rate 9600 bps
+        U0LCR  = 0X00000003;
+		}
+
+void delay(void)
+{
+int i;
+for (i=0;i<200000;i++);
+}
+unsigned int i,x,y,z;
+
+//void lcd_init(void);
+
+int main()
+{
+
+serial();
+	rtc();
+	while(1)
+	{
+	i=0;
+		x=SEC; 	y=MIN; z=HOUR;
+  	   sprintf(arr1,"sec:%d",x);
+  	while (arr1[i] != '\0')
+	{	 
+	  	while (!(U0LSR & 0x20));
+	  	U0THR = arr1[i];
+		i++;
+	}
+	U0THR='\n';
+delay();  	delay();	delay();
+
+	i=0;
+	 	sprintf(arr2,"min:%d",y);
+  	while (arr2[i] != '\0')
+	{
+	  	while (!(U0LSR & 0x20));
+	  	U0THR = arr2[i];
+		i++;
+	}
+		U0THR='\n';
+	i=0;
+		delay();
+			delay();  	delay();	delay();
+
+			sprintf(arr3,"hr:%d",z);
+  	while (arr3[i] != '\0')
+	{
+	  	while (!(U0LSR & 0x20));
+	  	U0THR = arr3[i];
+		i++;
+	}
+		U0THR='\n';
+	i=0;
+	delay();
+delay();  	delay();	delay();
+
+    }
+}`
+}
+                else {
+                    return `Your query is now beyond our the limit of this simulation page`;
+                }
+            }
+
+            function typeWriterEffect(text, sender, isCode) {
+                const chatBubble = document.createElement('div');
+                chatBubble.classList.add('chat-bubble', sender);
+                if (isCode) {
+                    chatBubble.classList.add('code');
+                }
+                chatLog.appendChild(chatBubble);
+                chatLog.scrollTop = chatLog.scrollHeight; // Scroll to bottom
+
+                let i = 0;
+                const speed = isCode ? 10 : 50; // Speed in milliseconds, faster for code
+                isGenerating = true;
+
+                function typeWriter() {
+                    if (i < text.length && isGenerating) {
+                        chatBubble.textContent += text.charAt(i);
+                        i++;
+                        timeoutId = setTimeout(typeWriter, speed);
+                    } else {
+                        isGenerating = false;
+                        if (sender === 'bot' && isCode) {
+                            addCopyButton(chatBubble, text);
+                        }
+                    }
+                }
+
+                typeWriter();
+            }
+
+            function stopGeneration() {
+                isGenerating = false;
+                clearTimeout(timeoutId);
+            }
+
+            function addCopyButton(chatBubble, text) {
+                const copyButton = document.createElement('button');
+                copyButton.textContent = 'Copy Code';
+                copyButton.classList.add('copy-button');
+                copyButton.addEventListener('click', function() {
+                    navigator.clipboard.writeText(text).then(() => {
+                        alert('Code copied to clipboard!');
+                    });
+                });
+                chatBubble.appendChild(copyButton);
+            }
+        });
+    </script>
+</body>
+</html>
