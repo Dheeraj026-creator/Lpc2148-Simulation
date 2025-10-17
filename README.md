@@ -56,7 +56,7 @@ Modern web browser (Chrome, Firefox, Edge)
 Terminal or code editor (like VS Code)
 
 Clone the Repository
-git clone https://github.com/YourUsername/LPC2148-Arduino-Simulator.git
+git clone https://github.com/Dheeraj026-creator/Lpc2148-Simulation.git
 cd LPC2148-Arduino-Simulator
 
 Install Dependencies
