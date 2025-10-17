@@ -1,89 +1,181 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LPC2148 Simulator</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f0f0f0;
-            display: flex;
-            justify-content: center; 
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-        }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LPC2148 Simulator</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f0f0f0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
 
-        .container {
-            background-color: white;
-            padding: 20px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-            border-radius: 10px;
-            display: flex;
-            flex-direction: row;
-            text-align: center;
-            width: 90%;
-            max-width: 1200px;
-        }
+    .container {
+      background-color: white;
+      padding: 20px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      border-radius: 10px;
+      display: flex;
+      flex-direction: row;
+      text-align: center;
+      width: 90%;
+      max-width: 1200px;
+      box-sizing: border-box;
+      overflow: hidden;
+    }
 
-        .editor-container {
-            flex: 1;
-            margin-right: 20px;
-        }
+    .editor-container {
+      flex: 1;
+      margin-right: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+    }
 
-        #editor {
-            height: 500px;
-            width: 100%;
-            border: 1px solid #ccc;
-            margin-bottom: 20px;
-        }
+    h1 {
+      font-size: 24px;
+      margin-bottom: 10px;
+    }
 
-        button {
-            padding: 10px 20px;
-            font-size: 16px;
-            margin-right: 10px;
-        }
+    select {
+      margin-bottom: 15px;
+      padding: 10px;
+      font-size: 16px;
+      width: 100%;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+      box-sizing: border-box;
+    }
 
-        #output {
-            margin-top: 20px;
-            font-family: monospace;
-            white-space: pre-wrap;
-            text-align: left;
-            color: red;
-        }
+    #editor {
+      height: 500px;
+      width: 100%;
+      border: 1px solid #ccc;
+      margin-bottom: 15px;
+      border-radius: 5px;
+    }
 
-        .simulation-container {
-            flex: 0 0 220px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
+    button {
+      padding: 10px 20px;
+      font-size: 16px;
+      margin: 5px;
+      border: none;
+      border-radius: 8px;
+      background-color: #007BFF;
+      color: white;
+      cursor: pointer;
+      transition: 0.3s ease;
+    }
 
-        #simulationCanvas {
-            border: 1px solid #000;
-            margin-top: 20px;
-        }
+    button:hover {
+      background-color: #0056b3;
+    }
 
-        select {
-            margin-bottom: 20px;
-            padding: 10px;
-            font-size: 16px;
-            width: 100%;
-        }
-        /* ===========================
+    #output {
+      margin-top: 15px;
+      font-family: monospace;
+      white-space: pre-wrap;
+      text-align: left;
+      color: red;
+      min-height: 50px;
+    }
+
+    .simulation-container {
+      flex: 0 0 220px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    #simulationCanvas {
+      border: 1px solid #000;
+      margin-top: 20px;
+      border-radius: 8px;
+    }
+
+    /* ===========================
+       Modal for Add Code
+       =========================== */
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 999;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      overflow: auto;
+      background-color: rgba(0, 0, 0, 0.5);
+      justify-content: center;
+      align-items: center;
+    }
+
+    .modal-content {
+      background-color: #fff;
+      padding: 20px;
+      border-radius: 10px;
+      width: 90%;
+      max-width: 600px;
+      box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
+      animation: slideDown 0.3s ease;
+    }
+
+    @keyframes slideDown {
+      from { transform: translateY(-50px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+
+    .modal textarea {
+      width: 100%;
+      height: 250px;
+      padding: 10px;
+      font-family: monospace;
+      font-size: 14px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      resize: vertical;
+      margin-bottom: 15px;
+      background-color: #fafafa;
+    }
+
+    .modal-buttons {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+    }
+
+    .modal-buttons button {
+      flex: 0 0 auto;
+    }
+
+    /* ===========================
        Responsive Styles
        =========================== */
     @media (max-width: 992px) {
+      body {
+        height: auto;
+        padding: 20px 0;
+      }
+
       .container {
         flex-direction: column;
         align-items: center;
+        width: 95%;
         height: auto;
       }
 
       .editor-container {
         margin-right: 0;
         width: 100%;
+      }
+
+      h1 {
+        font-size: 22px;
       }
 
       #editor {
@@ -104,7 +196,14 @@
 
     @media (max-width: 600px) {
       h1 {
-        font-size: 20px;
+        font-size: 18px;
+        margin-bottom: 8px;
+      }
+
+      select {
+        font-size: 14px;
+        padding: 8px;
+        margin-bottom: 10px;
       }
 
       button {
@@ -125,237 +224,220 @@
         width: 150px;
         height: 150px;
       }
+
+      .modal-content {
+        width: 90%;
+        padding: 15px;
+      }
+
+      .modal textarea {
+        height: 200px;
+      }
     }
-    </style>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.12/ace.js"></script>
+  </style>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.12/ace.js"></script>
 </head>
 <body>
-    
-    <div class="container">
-        <div class="editor-container">
-            <h1>LPC2148 Code Simulator</h1>
-            <select id="exampleSelector" onchange="loadExample()">
-                <option value="0">Select Example</option>
-                <option value="1">Blink LED</option>
-                <option value="2">Blink Two LEDs</option>
-                <option value="3">Toggle LED with Button</option>
-            </select>
-            <div id="editor"></div>
-            <button onclick="simulate()">Simulate</button>
-            <button onclick="stopSimulation()">Stop</button>
-            <button onclick="addCode()">Add Code</button>
-            <div id="output"></div>
-        </div>
-        <div class="simulation-container">
-            <canvas id="simulationCanvas" width="200" height="200"></canvas>
-        </div>
+  <div class="container">
+    <div class="editor-container">
+      <h1>LPC2148 Code Simulator</h1>
+      <select id="exampleSelector" onchange="loadExample()">
+        <option value="0">Select Example</option>
+        <option value="1">Blink LED</option>
+        <option value="2">Blink Two LEDs</option>
+        <option value="3">Toggle LED with Button</option>
+      </select>
+      <div id="editor"></div>
+      <button onclick="simulate()">Simulate</button>
+      <button onclick="stopSimulation()">Stop</button>
+      <button onclick="openModal()">Add Code</button>
+      <div id="output"></div>
     </div>
-    <script>
-        let simulationInterval;
+    <div class="simulation-container">
+      <canvas id="simulationCanvas" width="200" height="200"></canvas>
+    </div>
+  </div>
 
-        window.onload = function () {
-            const editor = ace.edit("editor");
-            editor.setTheme("ace/theme/monokai");
-            editor.session.setMode("ace/mode/c_cpp");
+  <!-- Modal for Add Code -->
+  <div id="codeModal" class="modal">
+    <div class="modal-content">
+      <h3>Add Your Custom Code</h3>
+      <textarea id="newCode" placeholder="Write or paste your C code here..."></textarea>
+      <div class="modal-buttons">
+        <button onclick="closeModal()" style="background-color: gray;">Cancel</button>
+        <button onclick="saveCode()">Save Code</button>
+      </div>
+    </div>
+  </div>
 
-            // Load the default example
-            loadExample();
-        }
+  <script>
+    let simulationInterval;
 
-        function loadExample() {
-            const editor = ace.edit("editor");
-            const exampleSelector = document.getElementById('exampleSelector');
-            const exampleIndex = exampleSelector.value;
+    window.onload = function () {
+      const editor = ace.edit("editor");
+      editor.setTheme("ace/theme/monokai");
+      editor.session.setMode("ace/mode/c_cpp");
+      loadExample();
+    }
 
-            const examples = {
-                "1": `#include <LPC214x.h>  // LPC2148 library
+    function loadExample() {
+      const editor = ace.edit("editor");
+      const exampleSelector = document.getElementById('exampleSelector');
+      const exampleIndex = exampleSelector.value;
 
-#define LED_PIN (1 << 0)  // Define LED pin as P0.0
+      const examples = {
+        "1": `#include <LPC214x.h>
+
+#define LED_PIN (1 << 0)
 
 void delay(unsigned int count) {
-    // Simple delay loop
-    unsigned int i, j;
-    for (i = 0; i < count; i++) {
-        for (j = 0; j < 10000; j++) {
-            // Do nothing, just waste time
-        }
-    }
+  unsigned int i, j;
+  for (i = 0; i < count; i++) {
+    for (j = 0; j < 10000; j++) {}
+  }
 }
 
 int main(void) {
-    // Configure P0.0 as output
-    IO0DIR |= LED_PIN;  // Set P0.0 to output
+  IO0DIR |= LED_PIN;
 
-    while (1) {
-        // Turn on the LED
-        IO0SET = LED_PIN;  // Set P0.0 high
-        delay(100);        // Delay
-
-        // Turn off the LED
-        IO0CLR = LED_PIN;  // Set P0.0 low
-        delay(100);        // Delay
-    }
-
-    return 0;
+  while (1) {
+    IO0SET = LED_PIN;
+    delay(100);
+    IO0CLR = LED_PIN;
+    delay(100);
+  }
+  return 0;
 }`,
+        "2": `#include <LPC214x.h>
 
-                "2": `#include <LPC214x.h>  // LPC2148 library
-
-#define LED1_PIN (1 << 0)  // Define LED1 pin as P0.0
-#define LED2_PIN (1 << 1)  // Define LED2 pin as P0.1
+#define LED1_PIN (1 << 0)
+#define LED2_PIN (1 << 1)
 
 void delay(unsigned int count) {
-    // Simple delay loop
-    unsigned int i, j;
-    for (i = 0; i < count; i++) {
-        for (j = 0; j < 10000; j++) {
-            // Do nothing, just waste time
-        }
-    }
+  unsigned int i, j;
+  for (i = 0; i < count; i++) {
+    for (j = 0; j < 10000; j++) {}
+  }
 }
 
 int main(void) {
-    // Configure P0.0 and P0.1 as output
-    IO0DIR |= LED1_PIN | LED2_PIN;  // Set P0.0 and P0.1 to output
+  IO0DIR |= LED1_PIN | LED2_PIN;
 
-    while (1) {
-        // Turn on LED1 and off LED2
-        IO0SET = LED1_PIN;  // Set P0.0 high
-        IO0CLR = LED2_PIN;  // Set P0.1 low
-        delay(100);         // Delay
-
-        // Turn off LED1 and on LED2
-        IO0CLR = LED1_PIN;  // Set P0.0 low
-        IO0SET = LED2_PIN;  // Set P0.1 high
-        delay(100);         // Delay
-    }
-
-    return 0;
+  while (1) {
+    IO0SET = LED1_PIN;
+    IO0CLR = LED2_PIN;
+    delay(100);
+    IO0CLR = LED1_PIN;
+    IO0SET = LED2_PIN;
+    delay(100);
+  }
+  return 0;
 }`,
+        "3": `#include <LPC214x.h>
 
-                "3": `#include <LPC214x.h>  // LPC2148 library
-
-#define LED_PIN (1 << 0)  // Define LED pin as P0.0
-#define BUTTON_PIN (1 << 1)  // Define Button pin as P0.1
+#define LED_PIN (1 << 0)
+#define BUTTON_PIN (1 << 1)
 
 void delay(unsigned int count) {
-    // Simple delay loop
-    unsigned int i, j;
-    for (i = 0; i < count; i++) {
-        for (j = 0; j < 10000; j++) {
-            // Do nothing, just waste time
-        }
-    }
+  unsigned int i, j;
+  for (i = 0; i < count; i++) {
+    for (j = 0; j < 10000; j++) {}
+  }
 }
 
 int main(void) {
-    // Configure P0.0 as output and P0.1 as input
-    IO0DIR |= LED_PIN;  // Set P0.0 to output
-    IO0DIR &= ~BUTTON_PIN;  // Set P0.1 to input
+  IO0DIR |= LED_PIN;
+  IO0DIR &= ~BUTTON_PIN;
 
-    while (1) {
-        // Check if button is pressed
-        if (IO0PIN & BUTTON_PIN) {
-            // Turn on the LED
-            IO0SET = LED_PIN;  // Set P0.0 high
-        } else {
-            // Turn off the LED
-            IO0CLR = LED_PIN;  // Set P0.0 low
-        }
-        delay(10);  // Small delay to debounce button
+  while (1) {
+    if (IO0PIN & BUTTON_PIN) {
+      IO0SET = LED_PIN;
+    } else {
+      IO0CLR = LED_PIN;
     }
-
-    return 0;
+    delay(10);
+  }
+  return 0;
 }`
-            };
+      };
 
-            editor.setValue(examples[exampleIndex] || "// Select an example to load code");
-        }
+      editor.setValue(examples[exampleIndex] || "// Select an example to load code");
+    }
 
-        function simulate() {
-            const editor = ace.edit("editor");
-            const code = editor.getValue();
-            const outputDiv = document.getElementById('output');
-            const canvas = document.getElementById('simulationCanvas');
-            const ctx = canvas.getContext('2d');
+    function simulate() {
+      const editor = ace.edit("editor");
+      const code = editor.getValue();
+      const outputDiv = document.getElementById('output');
+      const canvas = document.getElementById('simulationCanvas');
+      const ctx = canvas.getContext('2d');
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      outputDiv.textContent = 'Compiling...';
+
+      setTimeout(() => {
+        const error = checkForErrors(code);
+        if (error) {
+          outputDiv.textContent = `Compilation Error:\n${error}`;
+          return;
+        } else {
+          outputDiv.textContent = 'Compilation Successful!\nSimulating...';
+          const delayMatch = code.match(/delay\((\d+)\);/);
+          const delayTime = delayMatch ? parseInt(delayMatch[1]) * 10 : 1000;
+          let ledOn = false;
+
+          simulationInterval = setInterval(() => {
+            ledOn = !ledOn;
             ctx.clearRect(0, 0, canvas.width, canvas.height);
+            if (ledOn) {
+              ctx.fillStyle = 'green';
+              ctx.fillRect(50, 50, 100, 100);
+            }
+            outputDiv.textContent += ledOn ? 'LED ON\n' : 'LED OFF\n';
+          }, delayTime);
 
-            outputDiv.textContent = 'Compiling...';
-
-            // Simulate error checking
-            setTimeout(() => {
-                const error = checkForErrors(code);
-                if (error) {
-                    outputDiv.textContent = `Compilation Error:\n${error}`;
-                    return;
-                } else {
-                    outputDiv.textContent = 'Compilation Successful!\nSimulating...';
-
-                    // Extract the delay value from the code
-                    const delayMatch = code.match(/delay\((\d+)\);/);
-                    const delayTime = delayMatch ? parseInt(delayMatch[1]) * 10 : 1000; // Default to 1000 if not found
-
-                    // Simulate the LED toggling
-                    let ledOn = false;
-                    simulationInterval = setInterval(() => {
-                        ledOn = !ledOn;
-                        ctx.clearRect(0, 0, canvas.width, canvas.height);
-                        if (ledOn) {
-                            ctx.fillStyle = 'green';
-                            ctx.fillRect(50, 50, 100, 100);
-                        }
-                        outputDiv.textContent += ledOn ? 'LED ON\n' : 'LED OFF\n';
-                    }, delayTime);
-
-                    // Stop the simulation after 10 iterations
-                    setTimeout(() => {
-                        clearInterval(simulationInterval);
-                    }, delayTime * 10);
-                }
-            }, 500);
+          setTimeout(() => {
+            clearInterval(simulationInterval);
+          }, delayTime * 10);
         }
+      }, 500);
+    }
 
-        function stopSimulation() {
-            if (simulationInterval) {
-                clearInterval(simulationInterval);
-                const outputDiv = document.getElementById('output');
-                outputDiv.textContent += 'Simulation stopped by user.\n';
-            }
-        }
+    function stopSimulation() {
+      if (simulationInterval) {
+        clearInterval(simulationInterval);
+        const outputDiv = document.getElementById('output');
+        outputDiv.textContent += '\nSimulation stopped by user.\n';
+      }
+    }
 
-        function addCode() {
-            const newCode = prompt("Enter your code:");
-            if (newCode) {
-                const editor = ace.edit("editor");
-                editor.setValue(newCode);
-            }
-        }
+    /* ======= Modal Functions ======= */
+    function openModal() {
+      document.getElementById('codeModal').style.display = 'flex';
+    }
 
-        // Mock function to simulate error checking
-        function checkForErrors(code) {
-            if (!code.includes(';')) {
-                return 'Missing semicolon';
-            }
-            if (!code.includes('int main')) {
-                return 'Missing main function';
-            }
-            if (!code.includes('void delay')) {
-                return 'Missing delay function';
-            }
-            if (!code.match(/#include\s+<LPC214x\.h>/)) {
-                return 'Missing or incorrect library inclusion';
-            }
-            if (!code.match(/#define\s+LED_PIN\s+\(1\s+<<\s+\d+\)/)) {
-                return 'Missing or incorrect LED_PIN definition';
-            }
-            // Check for missing braces
-            const openBraces = (code.match(/{/g) || []).length;
-            const closeBraces = (code.match(/}/g) || []).length;
-            if (openBraces !== closeBraces) {
-                return 'Mismatched braces';
-            }
-            return null;
-        }
-    </script>
+    function closeModal() {
+      document.getElementById('codeModal').style.display = 'none';
+    }
+
+    function saveCode() {
+      const newCode = document.getElementById('newCode').value.trim();
+      if (newCode) {
+        const editor = ace.edit("editor");
+        editor.setValue(newCode);
+        closeModal();
+      }
+    }
+
+    function checkForErrors(code) {
+      if (!code.includes(';')) return 'Missing semicolon';
+      if (!code.includes('int main')) return 'Missing main function';
+      if (!code.includes('void delay')) return 'Missing delay function';
+      if (!code.match(/#include\s+<LPC214x\.h>/)) return 'Missing or incorrect library inclusion';
+      if (!code.match(/#define\s+LED_PIN\s+\(1\s+<<\s+\d+\)/)) return 'Missing or incorrect LED_PIN definition';
+      const openBraces = (code.match(/{/g) || []).length;
+      const closeBraces = (code.match(/}/g) || []).length;
+      if (openBraces !== closeBraces) return 'Mismatched braces';
+      return null;
+    }
+  </script>
 </body>
 </html>
