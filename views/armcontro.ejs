@@ -71,6 +71,61 @@
             font-size: 16px;
             width: 100%;
         }
+        /* ===========================
+       Responsive Styles
+       =========================== */
+    @media (max-width: 992px) {
+      .container {
+        flex-direction: column;
+        align-items: center;
+        height: auto;
+      }
+
+      .editor-container {
+        margin-right: 0;
+        width: 100%;
+      }
+
+      #editor {
+        height: 400px;
+      }
+
+      .simulation-container {
+        margin-top: 20px;
+        width: 100%;
+        justify-content: center;
+      }
+
+      #simulationCanvas {
+        width: 180px;
+        height: 180px;
+      }
+    }
+
+    @media (max-width: 600px) {
+      h1 {
+        font-size: 20px;
+      }
+
+      button {
+        width: 100%;
+        font-size: 14px;
+        margin: 5px 0;
+      }
+
+      #editor {
+        height: 300px;
+      }
+
+      #output {
+        font-size: 14px;
+      }
+
+      #simulationCanvas {
+        width: 150px;
+        height: 150px;
+      }
+    }
     </style>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.12/ace.js"></script>
 </head>

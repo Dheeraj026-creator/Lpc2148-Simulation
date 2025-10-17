@@ -25,10 +25,8 @@ app.use(bodyParser.urlencoded({ extended: true }));
 
 
 // Root route to check server status
+
 app.get('/', (req, res) => {
-    res.render("chatbot.ejs");
-});
-app.get('/simulation', (req, res) => {
     res.render("simulation.ejs");
 });
 app.get('/armcontro',(req,res)=>{
