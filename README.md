@@ -1,55 +1,55 @@
-LPC2148 & Arduino Web-Based Simulator
+LPC2148 & Arduino Web-Based Simulator 🚀
+
+Live Demo: [Click here to access the simulator](https://lpc2148-simulation.onrender.com)
+
 Project Overview
 
-This web-based simulator allows users to write, run, and visualize microcontroller code for LPC2148 (ARM) and Arduino. Users can control LEDs, select from default or example codes, add custom code via a modal, and see real-time LED simulation. The simulator validates code and animates LED sequences interactively, providing an engaging learning experience for microcontroller programming.
+This web-based simulator allows users to write, run, and visualize microcontroller code for LPC2148 (ARM) and Arduino. Users can control LEDs, select default/example codes, add custom code via a modal, and see real-time LED simulation. The simulator validates code and animates LED sequences interactively, providing an engaging learning environment for microcontroller programming.
 
 How It Works
 
-Users can select default or example codes or write their custom code.
+Users can select default or example codes or write custom code.
 
 Clicking Run executes the code and shows a real-time simulation of LEDs.
 
-Users can stop the simulation or modify code to experiment with different logic.
+Users can stop the simulation or modify the code to experiment with different logic.
 
 LED sequences and outputs update interactively based on the code.
 
 Features
 
-Interactive LED simulation for LPC2148 and Arduino.
+Interactive LED simulation for LPC2148 and Arduino
 
-Preloaded example codes for quick testing.
+Preloaded example codes for quick testing
 
-Custom code input via a modal or code editor.
+Custom code input via a modal or code editor
 
-Run/Stop buttons for real-time execution.
+Run/Stop buttons for real-time execution
 
-Code validation before running to prevent errors.
+Code validation before running to prevent errors
 
-Fully web-based; works on desktop and mobile.
+Fully web-based; works on desktop and mobile
 
 Technology Stack
 
 Frontend: HTML, CSS, JavaScript, EJS
-
-Backend: Node.js, Express.js (for server integration, example code loading, or saving code)
-
+Backend: Node.js, Express.js (for server integration, example code loading, and code saving)
 Simulation Engine: JavaScript-based LED animation
 
 Benefits
 
-Provides a hands-on learning environment for microcontroller programming.
+Provides a hands-on learning environment for microcontroller programming
 
-Eliminates the need for physical hardware to test code.
+Eliminates the need for physical hardware to test code
 
-Helps students and hobbyists experiment safely and visualize code behavior.
+Helps students and hobbyists experiment safely and visualize code behavior
 
-Supports both LPC2148 (ARM) and Arduino programming logic.
+Supports both LPC2148 (ARM) and Arduino programming logic
 
 How to Use
 Prerequisites
 
-Install Node.js
- (v18 or above recommended)
+Node.js (v18 or above recommended)
 
 Modern web browser (Chrome, Firefox, Edge)
 
@@ -72,30 +72,37 @@ Open in Browser
 
 Navigate to http://localhost:5000
 
-The home page allows you to choose LPC2148 or Arduino, load example code, or add your custom code.
+Choose LPC2148 or Arduino, load example code, or add custom code
 
 Example Codes
 
-LED Blink: Basic blinking LED pattern.
+LED Blink: Basic blinking LED pattern
 
-LED Sequence: Turns LEDs on and off in a sequence.
+LED Sequence: Turns LEDs on and off in a sequence
 
-Custom Patterns: Users can define their own patterns using code.
+Custom Patterns: Users can define their own LED patterns using code
 
 Future Enhancements
 
-Save user code online and load previously written programs.
+Save user code online and load previously written programs
 
-Extend support for more microcontrollers and peripherals.
+Extend support for more microcontrollers and peripherals
 
-Add real-time debugging output with console logs.
+Add real-time debugging output with console logs
 
-Mobile-optimized LED simulation and layout improvements.
+Mobile-optimized LED simulation and improved layout
 
 Demo / Deployment
 
 The simulator can be deployed on Render, Heroku, or any Node.js-compatible hosting.
 
-Simply push the repo, set your environment, and run node app.js.
+Push the repository to the server.
+
+Set environment variables if needed.
+
+Run the application:
+
+node app.js
+
 
 Ensure EJS templates and public assets (CSS/JS) are served correctly using Express static middleware.
